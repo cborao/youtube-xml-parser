@@ -2,36 +2,38 @@
 
 #
 # Simple XML parser for YouTube XML channels
+# César Borao Moratinos
+#
+# Based on "ytparser.py" code:
+#
 # Jesus M. Gonzalez-Barahona
 # jgb @ gsyc.es
 # SARO and SAT subjects (Universidad Rey Juan Carlos)
 # 2020
 #
-# Produces a HTML document in standard output, with
+# The input is a valid channel ID. The parser produces a HTML document in standard output, with
 # the list of videos on the channel
 #
-# How to get the XML document for a YouTube channel:
-# https://www.youtube.com/feeds/videos.xml?channel_id=UC300utwSVAYOoRLEqmsprfg
 
+from urllib.error import URLError
 from xml.sax.handler import ContentHandler
 from xml.sax import make_parser
 import sys
 import urllib.request
-import string
 
 videos = ""
 
+
 class YTHandler(ContentHandler):
 
-    def __init__ (self):
+    def __init__(self):
         self.inEntry = False
         self.inContent = False
         self.content = ""
         self.title = ""
         self.link = ""
 
-
-    def startElement (self, name, attrs):
+    def startElement(self, name, attrs):
         if name == 'entry':
             self.inEntry = True
         elif self.inEntry:
@@ -40,7 +42,7 @@ class YTHandler(ContentHandler):
             elif name == 'link':
                 self.link = attrs.get('href')
 
-    def endElement (self, name):
+    def endElement(self, name):
         global videos
 
         if name == 'entry':
@@ -54,11 +56,12 @@ class YTHandler(ContentHandler):
                 self.content = ""
                 self.inContent = False
 
-    def characters (self, chars):
+    def characters(self, chars):
         if self.inContent:
             self.content = self.content + chars
 
-# Load parser and driver
+
+# Loading parser and driver
 Parser = make_parser()
 Parser.setContentHandler(YTHandler())
 
@@ -69,25 +72,25 @@ if __name__ == "__main__":
 <!DOCTYPE html>
 <html lang="en">
   <body>
-    <h1>Channel contents:</h1>
+    <h1>Youtube channel contents:</h1>
     <ul>
-{videos}
+        {videos}
     </ul>
   </body>
 </html>
 """
 
-    if len(sys.argv)<2:
-        print("Usage: python xml-parser-youtube.py <document>")
-        print()
-        print(" <document>: file name of the document to parse")
+    if len(sys.argv) == 1:
+        print("Usage: python youtube_parser.py <channel id>")
+        print(" <channel id>: The unique ID of a youtube channel")
         sys.exit(1)
 
-    # Ready, set, go!
+    # Reading the channel's xml file
+    try:
+        xmlFile = urllib.request.urlopen('https://www.youtube.com/feeds/videos.xml?channel_id=' + sys.argv[1])
+        Parser.parse(xmlFile)
+        page = PAGE.format(videos=videos)
+        print(page)
 
-    # xmlFile = urllib.request.urlopen('https://www.youtube.com/feeds/videos.xml?channel_id=' + sys.argv[1]).read()
-    #xmlFile = open(sys.argv[1],"r")
-    xmlFile = urllib.request.urlopen('https://www.youtube.com/feeds/videos.xml?channel_id=' + sys.argv[1])
-    Parser.parse(xmlFile)
-    page = PAGE.format(videos=videos)
-    print(page)
+    except URLError:
+        print("Introduce a valid channel Id")
