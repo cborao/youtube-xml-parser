@@ -80,7 +80,7 @@ if __name__ == "__main__":
 </html>
 """
 
-    if len(sys.argv) == 1:
+    if len(sys.argv) < 2:
         print("Usage: python youtube_parser.py <channel id>")
         print(" <channel id>: The unique ID of a youtube channel")
         sys.exit(1)
